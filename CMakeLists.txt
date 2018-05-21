@@ -16,7 +16,9 @@ set(CMSIS_DIR ${LIB_DIR}/stm32f10x-stdperiph-lib/Libraries/CMSIS)
 file(GLOB CMSIS_SOURCE
            "${CMSIS_DIR}/CM3/DeviceSupport/ST/STM32F10x/startup/arm/startup_stm32f10x_md.s"
 )
-set(CMSIS_ST_HEADERS ${CMSIS_DIR}/CM3/DeviceSupport/ST/STM32F10x)
+set(CMSIS_ST_HEADERS 
+	${CMSIS_DIR}/CM3/CoreSupport
+	${CMSIS_DIR}/CM3/DeviceSupport/ST/STM32F10x)
 
 set(FREERTOS_DIR ${LIB_DIR}/FreeRTOS/src)
 set(FREERTOS_PORTABLE ${FREERTOS_DIR}/portable)
