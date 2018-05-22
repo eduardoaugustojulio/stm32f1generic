@@ -17,24 +17,30 @@ file(GLOB CMSIS_SOURCE
            "${CMSIS_DIR}/CM3/DeviceSupport/ST/STM32F10x/startup/arm/startup_stm32f10x_md.s"
 )
 set(CMSIS_ST_HEADERS 
-	${CMSIS_DIR}/CM3/CoreSupport
-	${CMSIS_DIR}/CM3/DeviceSupport/ST/STM32F10x)
+        "${CMSIS_DIR}/CM3/CoreSupport"
+        "${CMSIS_DIR}/CM3/DeviceSupport/ST/STM32F10x")
 
-set(FREERTOS_DIR ${LIB_DIR}/FreeRTOS/src)
-set(FREERTOS_PORTABLE ${FREERTOS_DIR}/portable)
+set(FREERTOS_DIR "${LIB_DIR}/FreeRTOS/src")
+set(FREERTOS_PORTABLE "${FREERTOS_DIR}/portable")
 file(GLOB FREERTOS_SOURCES
         "${FREERTOS_DIR}/*.c"
         "${FREERTOS_PORTABLE}/GCC/ARM_CM3/*.c"
-        "${FREERTOS_PORTABLE}/GCC/MemMang/heap_1.c"
+        "${FREERTOS_PORTABLE}/MemMang/heap_1.c"
 )
-set(FREERTOS_HEADERS ${FREERTOS_DIR}/include)
-include_directories(${STM_STD_HEADERS} ${CMSIS_ST_HEADERS} ${FREERTOS_HEADERS} ${FREERTOS_PORTABLE}/GCC/ARM_CM3)
+set(FREERTOS_HEADERS
+    "${FREERTOS_DIR}"
+    "${FREERTOS_DIR}/include"
+    "${FREERTOS_PORTABLE}/GCC/ARM_CM3"
+    "${FREERTOS_PORTABLE}/MemMang"
+)
+
+include_directories(${STM_STD_HEADERS} ${CMSIS_ST_HEADERS} ${FREERTOS_HEADERS})
 
 # enable for compile helloWord
-set(LIBOPENCM3_DIR ${LIB_DIR}/libopencm3)
-add_custom_target(libopencm3 make WORKING_DIRECTORY ${LIBOPENCM3_DIR})
-include_directories(${LIBOPENCM3_DIR}/include)
-link_directories(${LIBOPENCM3_DIR}/lib)
+#set(LIBOPENCM3_DIR ${LIB_DIR}/libopencm3)
+#add_custom_target(libopencm3 make WORKING_DIRECTORY ${LIBOPENCM3_DIR})
+#include_directories(${LIBOPENCM3_DIR}/include)
+#link_directories(${LIBOPENCM3_DIR}/lib)
 
 function(add_bin_from_elf bin elf)
   add_custom_target(${bin} ALL ${CMAKE_OBJCOPY} -Obinary ${elf} ${bin} DEPENDS ${elf})

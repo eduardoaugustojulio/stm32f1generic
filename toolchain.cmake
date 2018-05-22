@@ -10,7 +10,7 @@ CMAKE_FORCE_C_COMPILER("${USER_COMPILER_PATH}/arm-none-eabi-gcc"   GNU)
 CMAKE_FORCE_CXX_COMPILER("${USER_COMPILER_PATH}/arm-none-eabi-g++" GNU)
 
 set(PROCESSOR_FLAGS "-mthumb -mcpu=cortex-m3")
-set(COMMON_FLAGS " -DSTM32F10X_MD -DUSE_STDPERIPH_DRIVE ${PROCESSOR_FLAGS} -fdata-sections -ffunction-sections -fno-builtin")
+set(COMMON_FLAGS " -DSTM32F10X_MD -DUSE_STDPERIPH_DRIVER     ${PROCESSOR_FLAGS} -fdata-sections -ffunction-sections -fno-builtin")
 set(LD_FLAGS "-nostartfiles -specs=rdimon.specs -specs=nano.specs -specs=nosys.specs")
 set(CMAKE_C_FLAGS "-g -O2 -Wall --std=c11 ${COMMON_FLAGS} ${CMAKE_C_FLAGS}")
 set(CMAKE_CXX_FLAGS "-g -O2 --std=c++14 -fno-rtti -fno-exceptions ${COMMON_FLAGS} ${CMAKE_CXX_FLAGS}")
