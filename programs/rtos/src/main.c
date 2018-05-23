@@ -87,6 +87,16 @@ static void prvSetupHardware(void)
 
 static void prvBlinkLed(void *pvParameters)
 {
+	void Delay(vu32 nCount)
+	{
+	  for(; nCount != 0; nCount--);
+	}
+
+
+	GPIO_SetBits(GPIOC, GPIO_Pin_13);
+	Delay(8000);
+	GPIO_ResetBits(GPIOC, GPIO_Pin_13);
+	Delay(8000);
 
 }
 

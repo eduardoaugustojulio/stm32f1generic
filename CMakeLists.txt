@@ -1,4 +1,5 @@
 cmake_minimum_required(VERSION 2.8)
+project(STM32F1 C ASM)
 
 IF(NOT CMAKE_CROSSCOMPILING)
   message(FATAL_ERROR "Cross compiling only. Please use -DCMAKE_TOOLCHAIN_FILE=/PATH/TO/TOOLCHAIN_FILE .")
@@ -14,11 +15,14 @@ set(STM_STD_HEADERS ${STM_STD_DIR}/inc)
 
 set(CMSIS_DIR ${LIB_DIR}/stm32f10x-stdperiph-lib/Libraries/CMSIS)
 file(GLOB CMSIS_SOURCE
-           "${CMSIS_DIR}/CM3/DeviceSupport/ST/STM32F10x/startup/arm/startup_stm32f10x_md.s"
+          "${CMSIS_DIR}/CM3/DeviceSupport/ST/STM32F10x/*.c"
+          "${CMSIS_DIR}/CM3/DeviceSupport/ST/STM32F10x/startup/arm/startup_stm32f10x_md.s"
 )
 set(CMSIS_ST_HEADERS 
         "${CMSIS_DIR}/CM3/CoreSupport"
-        "${CMSIS_DIR}/CM3/DeviceSupport/ST/STM32F10x")
+        "${CMSIS_DIR}/CM3/DeviceSupport/ST/STM32F10x"
+        "${CMSIS_DIR}/CM3/DeviceSupport/ST/STM32F10x/startup/arm"
+)
 
 set(FREERTOS_DIR "${LIB_DIR}/FreeRTOS/src")
 set(FREERTOS_PORTABLE "${FREERTOS_DIR}/portable")
