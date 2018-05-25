@@ -3,14 +3,12 @@
 
 #include <stm32f10x.h>
 #include <stm32f10x_it.h>
-#include <stm32f10x_rcc.h>
-#include <stm32f10x_gpio.h>
-
+#include <stm32f10x_conf.h>
 
 #include <FreeRTOS.h>
 #include <task.h>
 
-#define Blink_Led_Priority                          ( tskIDLE_PRIORITY + 1 )
+#define Blink_Led_Priority                          ( tskIDLE_PRIORITY )
 
 GPIO_InitTypeDef GPIO_InitStructure;
 
@@ -21,7 +19,7 @@ static void prvBlinkLed(void *pvParameters);
 int main(){
 	prvSetupHardware();
 
-	xTaskCreate(prvBlinkLed, "Blink", configMINIMAL_STACK_SIZE, NULL, Blink_Led_Priority, NULL);
+	xTaskCreate(prvBlinkLed, "Blink", configMINIMAL_STACK_SIZE, NULL, 1, NULL);
 
 	vTaskStartScheduler();
 
@@ -32,71 +30,26 @@ int main(){
 
 static void prvSetupHardware(void)
 {
-	/* RCC system reset(for debug purpose). */
-	RCC_DeInit();
-
-	/* Enable HSE. */
-	RCC_HSEConfig( RCC_HSE_ON );
-
-	while (RCC_GetFlagStatus(RCC_FLAG_HSERDY) == RESET);
-
-	/* HCLK = SYSCLK. */
-	RCC_HCLKConfig( RCC_SYSCLK_Div1 );
-
-	/* PCLK2  = HCLK. */
-	RCC_PCLK2Config( RCC_HCLK_Div1 );
-
-	/* PCLK1  = HCLK/2. */
-	RCC_PCLK1Config( RCC_HCLK_Div2 );
-
-	/* Flash 2 wait state. */
-	*( volatile unsigned long  * )0x40022000 = 0x01;
-
-	/* PLLCLK = 8MHz * 9 = 72 MHz */
-	RCC_PLLConfig( RCC_PLLSource_HSE_Div1, RCC_PLLMul_9 );
-
-	/* Enable PLL. */
-	RCC_PLLCmd( ENABLE );
-
-	/* Wait till PLL is ready. */
-	while (RCC_GetFlagStatus(RCC_FLAG_PLLRDY) == RESET);
-
-	/* Select PLL as system clock source. */
-	RCC_SYSCLKConfig (RCC_SYSCLKSource_PLLCLK);
-
-	/* Wait till PLL is used as system clock source. */
-	while (RCC_GetSYSCLKSource() != 0x08);
-
+	SystemInit();
+	NVIC_PriorityGroupConfig(NVIC_PriorityGroup_4);
 	RCC_APB2PeriphClockCmd(RCC_APB2Periph_GPIOC, ENABLE);
 
 	/* Configure PC.4 as Output push-pull */
 	GPIO_InitStructure.GPIO_Pin = GPIO_Pin_13;
-	GPIO_InitStructure.GPIO_Speed = GPIO_Speed_10MHz;
 	GPIO_InitStructure.GPIO_Mode = GPIO_Mode_Out_PP;
+	GPIO_InitStructure.GPIO_Speed = GPIO_Speed_2MHz;
 	GPIO_Init(GPIOC, &GPIO_InitStructure);
 
-#ifdef  VECT_TAB_RAM
-  /* Set the Vector Table base location at 0x20000000 */
-  NVIC_SetVectorTable(NVIC_VectTab_RAM, 0x0);
-#else  /* VECT_TAB_FLASH  */
-  /* Set the Vector Table base location at 0x08000000 */
-  NVIC_SetVectorTable(NVIC_VectTab_FLASH, 0x0);
-#endif
-
+	GPIO_ResetBits(GPIOC, GPIO_Pin_13); // Set C13 to Low level ("0")
 }
 
 static void prvBlinkLed(void *pvParameters)
 {
-	void Delay(vu32 nCount)
-	{
-	  for(; nCount != 0; nCount--);
+	const TickType_t xDelay = 500;
+	for(;;){
+		GPIOC->ODR ^= GPIO_Pin_13;
+		vTaskDelay(xDelay / portTICK_RATE_MS);
 	}
-
-
-	GPIO_SetBits(GPIOC, GPIO_Pin_13);
-	Delay(8000);
-	GPIO_ResetBits(GPIOC, GPIO_Pin_13);
-	Delay(8000);
 
 }
 
