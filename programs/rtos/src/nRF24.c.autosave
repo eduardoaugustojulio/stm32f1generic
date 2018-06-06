@@ -8,11 +8,11 @@ static void initSPIx(void)
     RCC_APB2PeriphClockCmd(RCC_APB2Periph_GPIOA, ENABLE);
     GPIOConfNrf24.GPIO_Pin = CE_NRF24 | CSN_NRF24 |
             SCK_NRF24 | MOSI_NRF24 | MISO_NRF24;
-
+    
     GPIOConfNrf24.GPIO_Speed = GPIO_Speed_50MHz;
     GPIOConfNrf24.GPIO_Mode = GPIO_Mode_AF_PP;
     GPIO_Init(GPIOA, &GPIOConfNrf24);
-
+    
     RCC_APB2PeriphClockCmd(RCC_APB2Periph_SPI1, ENABLE);
     SpiConfNrf24.SPI_Direction = SPI_Direction_2Lines_FullDuplex;
     SpiConfNrf24.SPI_Mode = SPI_Mode_Master;
@@ -47,12 +47,12 @@ uint8_t Nrf24WriteRead(uint8_t data)
 static uint8_t ReadRegNrf24(uint8_t reg)
 {
     uint8_t value;
-
+    
     CSN_NRF24_LOW();
     value = Nrf24WriteRead(reg & nRF24_MASK_REG_MAP); // TODO CHANGE TO CORRECT FLAG
     value = Nrf24WriteRead(0x00);
     CSN_NRF24_HIGH();
-
+    
     return value;
 }
 
@@ -99,16 +99,16 @@ uint8_t checkNrf24(void) {
     uint8_t i;
     uint8_t rxbuf[5];
     uint8_t *ptr = (uint8_t *)nRF24_TEST_ADDR;
-
+    
     // Write test TX address and read TX_ADDR register
     WriteMultipleRegNrf24(nRF24_CMD_W_REGISTER | nRF24_REG_TX_ADDR, ptr, 5);
     ReadMultipleRegNrf24(nRF24_CMD_R_REGISTER | nRF24_REG_TX_ADDR, rxbuf, 5);
-
+    
     // Compare buffers, return error on first mismatch
     for (i = 0; i < 5; i++) {
         if (rxbuf[i] != *ptr++) return 0;
     }
-
+    
     return 1;
 }
 
@@ -131,7 +131,7 @@ void setPowerModeNrf24(uint8_t mode){
 //   mode - operational mode, one of nRF24_MODE_xx values
 void setOperationalModeNrf24(uint8_t mode) {
     uint8_t reg;
-
+    
     // Configure PRIM_RX bit of the CONFIG register
     reg  = ReadRegNrf24(nRF24_REG_CONFIG);
     reg &= ~nRF24_CONFIG_PRIM_RX;
@@ -181,9 +181,19 @@ void setAddrWidthNrf24(uint8_t addr_width){
 }
 
 
+// Set static RX address for a specified pipe
+// input:
+//   pipe - pipe to configure address, one of nRF24_PIPEx values
+//   addr - pointer to the buffer with address
+// note: pipe can be a number from 0 to 5 (RX pipes) and 6 (TX pipe)
+// note: buffer length must be equal to current address width of transceiver
+// note: for pipes[2..5] only first byte of address will be written because
+//       other bytes of address equals to pipe1
+// note: for pipes[2..5] only first byte of address will be written because
+//       pipes 1-5 share the four most significant address bytes
 void setAddrNrf24(uint8_t pipe, const uint8_t *addr){
     uint8_t addr_width;
-
+    
     // RX_ADDR_Px register
     switch (pipe) {
     case TxPipe:
@@ -191,18 +201,18 @@ void setAddrNrf24(uint8_t pipe, const uint8_t *addr){
     case RxPipe1:
         // Get address width
         addr_width = ReadRegNrf24((nRF24_REG_SETUP_AW) + 1);
-                // Write address in reverse order (LSByte first)
-                addr += addr_width;
-
+        // Write address in reverse order (LSByte first)
+        addr += addr_width;
+        
         CSN_NRF24_LOW();
         Nrf24WriteRead(nRF24_CMD_W_REGISTER | Nrf24AddrRegs[pipe]);
         do {
             Nrf24WriteRead(*addr--);
         } while (addr_width--);
         CSN_NRF24_HIGH();
-
+        
         break;
-
+        
     case RxPipe2:
     case RxPipe3:
     case RxPipe4:
