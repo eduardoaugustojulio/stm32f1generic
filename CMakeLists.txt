@@ -42,6 +42,7 @@ set(FREERTOS_HEADERS
     "${FREERTOS_PORTABLE}/MemMang"
 )
 
+
 set(STM32_GENERIC ${CMSIS_SOURCE} ${FREERTOS_SOURCES}  ${STM_STD_SOURCES})
 include_directories(${STM_STD_HEADERS} ${CMSIS_ST_HEADERS} ${FREERTOS_HEADERS})
 
@@ -60,5 +61,6 @@ function(bin_size bin)
 		COMMAND ${CMAKE_SIZE} --format=berkeley ${bin})
 endfunction(bin_size)
 
-#add_subdirectory(${PROGRAM_DIR}/helloWord)
-add_subdirectory(${PROGRAM_DIR}/rtos)
+#add_subdirectory(helloWord)
+add_subdirectory(rtos)
+add_subdirectory(spi)
