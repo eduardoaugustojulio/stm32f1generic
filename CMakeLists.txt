@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 2.8)
 set(CMAKE_TOOLCHAIN_FILE "${CMAKE_CURRENT_SOURCE_DIR}/toolchain.cmake")
-project(STM32 C ASM)
+project(rtos C ASM)
 
 IF(NOT CMAKE_CROSSCOMPILING)
   message(FATAL_ERROR "Cross compiling only. Please use -DCMAKE_TOOLCHAIN_FILE=../toolchain.cmake ..")
@@ -55,5 +55,16 @@ function(bin_size bin)
 		COMMAND ${CMAKE_SIZE} --format=berkeley ${bin})
 endfunction(bin_size)
 
-add_subdirectory(rtos)
-add_subdirectory(spi)
+set(SRCS_PATH	
+    "${CMAKE_CURRENT_SOURCE_DIR}/src"
+)
+file(GLOB SRCS
+    "${SRCS_PATH}/*.c"
+    "${SRCS_PATH}/*.h"
+)
+
+include_directories(${SRCS_PATH})
+add_executable("${PROJECT_NAME}.elf" ${SRCS} ${STM32_GENERIC})
+
+add_bin_from_elf("${PROJECT_NAME}.bin" "${PROJECT_NAME}.elf")
+bin_size("${PROJECT_NAME}.elf")

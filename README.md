@@ -1,6 +1,6 @@
 # STM32F1GENERIC  
   
-Template repository to stm32f103c8t6:
+FreeRTOS template repository to stm32 blue pill board.
 
 ### to build:
 
