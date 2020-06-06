@@ -9,11 +9,11 @@ CMAKE_FORCE_C_COMPILER("arm-none-eabi-gcc" GNU)
 CMAKE_FORCE_CXX_COMPILER("arm-none-eabi-g++" GNU)
 
 set(MCU_FLAGS "-mthumb -mcpu=cortex-m3 -msoft-float")
-set(COMPILER_FLAGS "-fdata-sections -ffunction-sections -fno-builtin")
+set(COMPILER_FLAGS "-fdata-sections -ffunction-sections -fno-builtin -finline-functions")
 set(COMMON_FLAGS "${MCU_FLAGS} ${COMPILER_FLAGS}")
 
-set(CMAKE_C_FLAGS "-g -O2 -std=c11 -Wextra ${COMMON_FLAGS}")
-set(CMAKE_CXX_FLAGS "-g -O2 -std=c++14 -Wextra ${COMMON_FLAGS}")
+set(CMAKE_C_FLAGS "-Os -std=c11 -Wextra ${COMMON_FLAGS}")
+set(CMAKE_CXX_FLAGS "-Os -std=c++14 -Wextra ${COMMON_FLAGS}")
 
 set(LD_FLAGS "-nostartfiles -specs=nano.specs -specs=nosys.specs")
 set(LINKER_SCRIPT_DIR "${CMAKE_SOURCE_DIR}/libs/libopencm3/lib/stm32/f1/stm32f103x8.ld")
