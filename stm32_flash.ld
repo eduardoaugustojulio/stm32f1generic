@@ -1,0 +1,1 @@
+libs/stm32f10x-stdperiph-lib/stm32_flash.ld

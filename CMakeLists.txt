@@ -1,62 +1,35 @@
-cmake_minimum_required(VERSION 2.8)
-set(CMAKE_TOOLCHAIN_FILE "${CMAKE_CURRENT_SOURCE_DIR}/toolchain.cmake")
-project(rtos C ASM)
+cmake_minimum_required(VERSION 3.4)
+set(CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake")
+set(CMAKE_TOOLCHAIN_FILE "${CMAKE_SOURCE_DIR}/toolchain.cmake")
+project(stm32generic C ASM)
 
-IF(NOT CMAKE_CROSSCOMPILING)
-  message(FATAL_ERROR "Cross compiling only. Please use -DCMAKE_TOOLCHAIN_FILE=../toolchain.cmake ..")
-ENDIF(NOT CMAKE_CROSSCOMPILING)
+include(FreeRTOS)
+include(STM32StdPeriphLib)
 
-set(SRCS_PATH "${CMAKE_SOURCE_DIR}/src")
-set(LIB_DIR "${CMAKE_SOURCE_DIR}/libraries")
+set(MCU_FLAGS "-mthumb -mcpu=cortex-m3 -msoft-float")
+set(COMPILER_FLAGS "-fdata-sections -ffunction-sections -fno-builtin -finline-functions")
+set(COMMON_FLAGS "${MCU_FLAGS} ${COMPILER_FLAGS}")
 
-# STM LIBS
-set(STM_STD_DIR "${LIB_DIR}/stm32f10x-stdperiph-lib/Libraries/STM32F10x_StdPeriph_Driver")
-set(STM_STD_HEADERS "${STM_STD_DIR}/inc")
-file(GLOB STM_STD_SOURCES 
-    "${STM_STD_DIR}/src/*.c"
-)
+set(CMAKE_C_FLAGS "-Os -std=c11 -Wextra ${COMMON_FLAGS}")
+set(CMAKE_CXX_FLAGS "-Os -std=c++14 -Wextra ${COMMON_FLAGS}")
 
-# CMSIS
-set(CMSIS_DIR "${LIB_DIR}/stm32f10x-stdperiph-lib/Libraries/CMSIS/CM3")
-set(CMSIS_ST_HEADERS 
-    "${CMSIS_DIR}/CoreSupport"
-    "${CMSIS_DIR}/DeviceSupport/ST/STM32F10x"
-    "${CMSIS_DIR}/DeviceSupport/ST/STM32F10x/startup/arm"
-)
-file(GLOB CMSIS_SOURCE
-    "${CMSIS_DIR}/DeviceSupport/ST/STM32F10x/*.c"
-    "${CMSIS_DIR}/DeviceSupport/ST/STM32F10x/startup/arm/startup_stm32f10x_md.s"
-)
+set(LD_FLAGS "-specs=nano.specs -specs=nosys.specs")
+set(LINKER_SCRIPT_DIR "${CMAKE_SOURCE_DIR}/stm32_flash.ld")
+set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} ${LD_FLAGS} ${MCU_FLAGS} -T ${LINKER_SCRIPT_DIR}")
 
-# FREERTOS
-set(FREERTOS_DIR "${LIB_DIR}/FreeRTOS/src")
-set(FREERTOS_PORTABLE "${FREERTOS_DIR}/portable")
-set(FREERTOS_HEADERS
-    "${FREERTOS_DIR}"
-    "${FREERTOS_DIR}/include"
-    "${FREERTOS_PORTABLE}/GCC/ARM_CM3"
-    "${FREERTOS_PORTABLE}/MemMang"
-)
-file(GLOB FREERTOS_SOURCES
-        "${FREERTOS_DIR}/*.c"
-        "${FREERTOS_PORTABLE}/GCC/ARM_CM3/*.c"
-        "${FREERTOS_PORTABLE}/MemMang/heap_1.c"
-)
+include_directories("src")
+file(GLOB SOURCES "src/*.c")
 
-set(STM32_SOURCES ${CMSIS_SOURCE} ${FREERTOS_SOURCES}  ${STM_STD_SOURCES})
-set(STM32_HEADERS ${STM_STD_HEADERS} ${CMSIS_ST_HEADERS} ${FREERTOS_HEADERS}) 
-include_directories(${SRCS_PATH} ${STM32_HEADERS})
-
-file(GLOB SRCS "${SRCS_PATH}/*.c")
-add_executable("${PROJECT_NAME}.elf" ${SRCS} ${STM32_SOURCES})
+add_executable(${PROJECT_NAME}.elf ${SOURCES})
+target_link_libraries(${PROJECT_NAME}.elf stm32_stdperiph freertos)
 
 function(add_bin_from_elf bin elf)
   add_custom_target(${bin} ALL ${CMAKE_OBJCOPY} -Obinary ${elf} ${bin} DEPENDS ${elf})
 endfunction(add_bin_from_elf)
 
 function(calc_bin_size bin)
-	add_custom_command(TARGET ${bin} POST_BUILD 
-		COMMAND ${CMAKE_SIZE} --format=berkeley ${bin})
+    add_custom_command(TARGET ${bin} POST_BUILD 
+        COMMAND ${CMAKE_SIZE} --format=berkeley ${bin})
 endfunction(calc_bin_size)
 
 add_bin_from_elf("${PROJECT_NAME}.bin" "${PROJECT_NAME}.elf")
