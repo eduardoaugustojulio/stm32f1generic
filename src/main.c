@@ -6,7 +6,7 @@
 #include <libopencm3/stm32/gpio.h>
 #include <libopencm3/cm3/nvic.h>
 
-#include <usbcdc.h>
+#include <usb/usbcdc.h>
 
 static void
 flasher(void *arg __attribute__((unused))) {
@@ -42,4 +42,4 @@ main (void) {
     vTaskStartScheduler();
     for (;;);
     return 0;    
-}
+    }

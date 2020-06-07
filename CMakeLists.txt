@@ -1,45 +1,35 @@
-cmake_minimum_required(VERSION 2.8)
+cmake_minimum_required(VERSION 3.4)
+set(CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake")
 set(CMAKE_TOOLCHAIN_FILE "${CMAKE_SOURCE_DIR}/toolchain.cmake")
-project(rtos C ASM)
+project(stm32generic C ASM)
+
+include(FreeRTOS)
+include(libopencm3)
+
+set(MCU_FLAGS "-mthumb -mcpu=cortex-m3 -msoft-float")
+set(COMPILER_FLAGS "-fdata-sections -ffunction-sections -fno-builtin -finline-functions")
+set(COMMON_FLAGS "${MCU_FLAGS} ${COMPILER_FLAGS}")
+
+set(CMAKE_C_FLAGS "-Os -std=c11 -Wextra ${COMMON_FLAGS}")
+set(CMAKE_CXX_FLAGS "-Os -std=c++14 -Wextra ${COMMON_FLAGS}")
+
+set(LD_FLAGS "-nostartfiles -specs=nano.specs -specs=nosys.specs")
+set(LINKER_SCRIPT_DIR "${CMAKE_SOURCE_DIR}/stm32f103x8.ld")
+set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} ${LD_FLAGS} ${MCU_FLAGS} -T ${LINKER_SCRIPT_DIR}")
+
+include_directories("src" "src/usb")
+file(GLOB SOURCES "src/*.c" "src/usb/*.c")
 
 function(add_bin_from_elf bin elf)
   add_custom_target(${bin} ALL ${CMAKE_OBJCOPY} -Obinary ${elf} ${bin} DEPENDS ${elf})
 endfunction(add_bin_from_elf)
 
-function(elf_size bin)
+function(calc_bin_size bin)
     add_custom_command(TARGET ${bin} POST_BUILD 
         COMMAND ${CMAKE_SIZE} --format=berkeley ${bin})
-endfunction(elf_size)
+endfunction(calc_bin_size)
 
-add_definitions(-DSTM32F1)
-set(LIB_DIR "${CMAKE_SOURCE_DIR}/libs")
-set(SRCS_PATH "${CMAKE_SOURCE_DIR}/src")
-file(GLOB SRCS "${SRCS_PATH}/*.c")
-
-# LIBOPENCM3
-set(LIBOPENCM3_DIR "${LIB_DIR}/libopencm3")
-add_custom_target(libopencm3 make WORKING_DIRECTORY ${LIBOPENCM3_DIR})
-set(LIBOPENCM3_HEADERS "${LIBOPENCM3_DIR}/include")
-set(LIBOPENCM3_BINARIES "${LIBOPENCM3_DIR}/lib")
-link_directories(${LIBOPENCM3_BINARIES})
-
-# FREERTOS
-set(FREERTOS_DIR "${LIB_DIR}/FreeRTOS/src")
-set(FREERTOS_PORTABLE "${FREERTOS_DIR}/portable")
-set(FREERTOS_HEADERS "${FREERTOS_DIR}/include" "${FREERTOS_PORTABLE}/GCC/ARM_CM3" "${FREERTOS_PORTABLE}/MemMang")
-file(GLOB FREERTOS_SOURCES "${FREERTOS_DIR}/*.c" "${FREERTOS_PORTABLE}/GCC/ARM_CM3/*.c" "${FREERTOS_PORTABLE}/MemMang/heap_1.c")
-
-# LIBWWG
-set(LIBWWG_DIR "${LIB_DIR}/libwwg")
-file(GLOB LIBWWG_SOURCES "${LIBWWG_DIR}/src/*.c")
-set(LIBWWG_HEADERS "${LIBWWG_DIR}/include")
-
-set(STM32_SOURCES ${SRCS} ${FREERTOS_SOURCES} ${LIBWWG_SOURCES})
-set(STM32_HEADERS ${SRCS_PATH} ${FREERTOS_HEADERS} ${LIBOPENCM3_HEADERS} ${LIBWWG_HEADERS})
-
-include_directories(${STM32_HEADERS})
-add_executable("${PROJECT_NAME}.elf" ${STM32_SOURCES})
-target_link_libraries("${PROJECT_NAME}.elf" "opencm3_stm32f1")
-
+add_executable(${PROJECT_NAME}.elf ${SOURCES})
+target_link_libraries(${PROJECT_NAME}.elf opencm3_stm32f1 freertos)
 add_bin_from_elf("${PROJECT_NAME}.bin" "${PROJECT_NAME}.elf")
-elf_size("${PROJECT_NAME}.elf")
+calc_bin_size("${PROJECT_NAME}.elf")
