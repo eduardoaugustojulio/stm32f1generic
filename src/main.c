@@ -18,12 +18,12 @@ flasher(void *arg __attribute__((unused))) {
 
 }
 
-void
-usb_hello_word(void) {
+static void
+usb_hello_word(void *arg __attribute__((unused))) {
 
     usb_getc();
-    for(;;){
-        usb_printf("hello-word!\n");
+    for(;;) {
+        usb_printf("hello-wolrd!\n");
     }
 }
 
