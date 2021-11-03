@@ -1,7 +1,8 @@
-#include <rf24.h>
-#include <spi.h>
+#include "spi.h"
 
-static rf24_t rf;
+#include "rf24.h"
+
+static rf24_t rf24;
 
 void rf24_init(uint8_t cepin, uint8_t cspin, uint32_t spi_speed)
 {

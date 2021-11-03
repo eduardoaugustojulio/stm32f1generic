@@ -1,6 +1,10 @@
-#include <stdlib.h>
-#include <stdio.h>
+#include <stdint.h>
 
-void spi_init();
-void spi_css(uint8_t level);
-uint8_t spi_xfer_byte(uint8_t byte);
+#include <libopencm3/stm32/rcc.h>
+#include <libopencm3/stm32/gpio.h>
+#include <libopencm3/stm32/spi.h>
+
+void sp1_nss_set(uint8_t level);
+uint8_t spi1_xfer_byte(uint8_t byte);
+void spi1_write(uint8_t byte);
+void spi1_init();

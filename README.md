@@ -8,9 +8,10 @@ FreeRTOS template repository to stm32 blue pill board.
 cd stm32f1generic/
 mkdir build/ && cd build/
 cmake -DCMAKE_TOOLCHAIN_FILE=../toolchain.cmake ..
-make
+make libopencm3
+make all
 ```
 
 ### to flash:
 
-`st-flash write programs/rtos/rtos.bin 0x8000000`
+`st-flash write stm32generic.bin 0x8000000`

@@ -8,38 +8,53 @@
 
 #include <usb/usbcdc.h>
 
-static void
-flasher(void *arg __attribute__((unused))) {
+#include "spi.h"
+
+static void blink(void *arg __attribute__((unused))){
+    rcc_periph_clock_enable(RCC_GPIOC);
+    gpio_set_mode(GPIOC,GPIO_MODE_OUTPUT_2_MHZ,GPIO_CNF_OUTPUT_PUSHPULL,GPIO13);
 
     for (;;) {
-            gpio_toggle(GPIOC,GPIO13);
-            vTaskDelay(pdMS_TO_TICKS(400));
+        gpio_toggle(GPIOC,GPIO13);
+        vTaskDelay(pdMS_TO_TICKS(400));
     }
-
 }
 
-static void
-usb_hello_word(void *arg __attribute__((unused))) {
-
+static void usb_hello_word(void *arg __attribute__((unused))){
     usb_getc();
     for(;;) {
         usb_printf("hello-wolrd!\n");
     }
 }
 
-int
-main (void) {
 
-    rcc_clock_setup_in_hse_8mhz_out_72mhz();    // Use this for "blue pill"
-    rcc_periph_clock_enable(RCC_GPIOC);
-    gpio_set_mode(GPIOC,GPIO_MODE_OUTPUT_2_MHZ,GPIO_CNF_OUTPUT_PUSHPULL,GPIO13);
-    
-    usb_start(1,1);
-   
-    xTaskCreate(usb_hello_word, "hello-word", 300, NULL, configMAX_PRIORITIES-1, NULL);
-    xTaskCreate(flasher, "flash", 100, NULL, configMAX_PRIORITIES-1, NULL);
+static void spi_task(){
+    const char *str = "hello-word";
 
-    vTaskStartScheduler();
-    for (;;);
-    return 0;    
+    spi1_init();
+
+    for(;;){
+        spi1_nss_set(false);
+        
+        for(int i = 0; i < strlen(str); i++){
+            spi1_xfer_byte(str[i]);
+        }
+        
+        spi1_nss_set(true);
+
+        vTaskDelay(pdMS_TO_TICKS(1000));
     }
+}
+
+int main(void){
+    rcc_clock_setup_in_hse_8mhz_out_72mhz();  
+    
+    xTaskCreate(blink, "blink", configMINIMAL_STACK_SIZE, NULL, configMAX_PRIORITIES-1, NULL);
+    xTaskCreate(spi_task, "spi_task",1024, NULL, configMAX_PRIORITIES-1, NULL);
+    
+    vTaskStartScheduler();
+    
+    for (;;);
+
+    return 0;    
+}
